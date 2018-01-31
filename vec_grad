@@ -1,0 +1,124 @@
+non-non:
+
+for every trainig example:
+   calculate all the scores by multiplying by weights
+   so we're multiplying the feature vector by the weight matrix
+
+   say features are: height, IQ, age
+
+   [187, 137, 45]
+
+   weight matrix is a score per feature per category:
+
+   say categories are Cle, Pit, Bos, Sea
+
+   [[0.4, -1.5, 3.4, 0.2], 
+    [-0.2, 1.2, -1.2, 1.2],
+    [0.01, 2.02, 3.2, 0.01]]
+
+  then the scores would be:
+   score for height * pittsburgh height weight + [same for other two]
+
+   [ 47.85, -25.2, ... ]
+
+ the correct class score is the one for the truth (i.e. I live in Pittsburgh, so the score of 187*-1.5+137*1.2+45*2.02 would be the "correct"
+
+so a gradient matrix mask would be constructed by:
+ - first converting the hinge mask from booleans to ints (1 or 0)
+ - then adding up the ones and putting them in the "correct" spot
+
+ so, for all the cities we're guesing about do this:
+    get the difference between that score and the "correct" and add 1
+    if it's greater than 0 add it to the loss
+
+    (just Cle): 47.85 - (-25.2) = 73.05
+
+    GRADIENT: add the current feature vector to the gradient associated with the current class (city) - WHY?  gradient is shaped like the weights, so turn it on its side to add the vector, but only if it's not the 'correct" one.
+
+    i.e. GRADIENT matrix will end up being: 
+
+    [[187, 0],
+     [137, 0],
+     [45, 0]]
+
+    for the "correct" row, we'd multiply the number of loss-contributing classes (how many cities were REALLY guessed wrong) by the vector
+    and that's how much we'd subtract
+
+    in this case, just minus the first guy (me) from the Pittsburgh row, cause we were right.
+
+   after another iteration with someone else:
+
+   [145, 99, 37]
+
+   we'd have 
+
+   [ 39.37, -26.96]
+
+   if this person is from Cleveland, then the "correct" is -26.96
+
+   so, evaluating the Pittsburgh score: -26.96 - 39.37 = -66.33
+
+   less than zero , so it doesn't think he's from Pittsburgh, which s right, no added loss
+   no additions to any gradients either,
+
+   then take the averages for both loss and gradient
+   also add the regularization 
+   and add the derivative of regularization to all partials in grad matrix
+
+   So, describing this as a matrix/vetor operation:
+
+   subtract a vector of "corrects" from each column, 
+   then add delta (1)
+   times the number of columns
+
+   GRADS:
+
+   WEIGHTS:
+
+   Cle  |   Pit
+  [[0.4, -1.5], 
+  [-0.2, 1.2],
+  [0.01, 2.02]]
+
+GRADS:
+   Cle  |   Pit
+    Ch    Ph 
+    Ci    Pi
+    Ca    Pa
+
+Each column will be the sums of all the examples, with two masks?
+      unless
+  Mask:
+
+  Cle |  Pit
+
+   T      T
+   T      F
+   F      F
+   ..     ..
+
+   So, Cle column will be like [all the hieghts, unless the corresponding entry in hinge_mask is false, all the IQs, uneless..., ages...]
+
+   Same with the Pit column
+   
+ So for all 50 exs, add the heights, IQs and ages, and store the sum in both the Pit and Cle columns, except in cases where the mask value is false for that example and city
+
+Insights I missed:
+- mask has to be integer, rather than boolean
+- dot product to get the final result
+
+So, describing it the other way:
+
+
+
+
+So, convert the mask from T -> 1, F -> for correct scores: sum of 1's in row
+
+And dot product of -> that mask and 
+result: Cities x traits
+A: people x traits (X)
+B: people x cities -> each row an example, made up of 1, 0, or neg loss sum for each city
+
+
+
+
