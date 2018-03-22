@@ -39,17 +39,19 @@ def softmax_loss_naive(W, X, y, reg):
     correct_ratio = ex_truth / ex_sum
     this_loss = - np.log(correct_ratio) 
     for j in xrange(num_classes):
+      row_of_derivatives = (np.exp(scores[j]) / ex_sum) * X[i]
       if j == y[i]:
-        dW.transpose()[j] += ((np.exp(scores[j]) / ex_sum) * X[i]) - X[i]
         #dW.transpose()[j] += (correct_ratio * X[i]) - X[i]
+        dW.transpose()[j] += row_of_derivatives - X[i]
       else:
-        dW.transpose()[j] += (np.exp(scores[j]) / ex_sum) * X[i]
+        #dW.transpose()[j] += (np.exp(scores[j]) / ex_sum) * X[i]
+        dW.transpose()[j] += row_of_derivatives
     loss += this_loss
   #############################################################################
   #                          END OF YOUR CODE                                 #
   #############################################################################
-  loss += reg * np.sum(W * W)
   loss /= X.shape[0]
+  loss += reg * np.sum(W * W)
   dW += (reg * W * 2)
   dW /= X.shape[0]
 
@@ -80,16 +82,15 @@ def softmax_loss_vectorized(W, X, y, reg):
   corr_ratios = ex_truth / ex_sums
   loss = np.sum(- np.log(corr_ratios))
   quotients = ex_scores.T / ex_sums
-  correct_sums = np.sum(scores[y], axis=0)
   quotients[y,np.arange(len(y))] += -1
   dW = quotients.dot(X).T
+  loss /= X.shape[0]
+  loss += reg * np.sum(W * W)
+  dW += (reg * W * 2)
+  dW /= X.shape[0]
   #############################################################################
   #                          END OF YOUR CODE                                 #
   #############################################################################
-  loss += reg * np.sum(W * W)
-  loss /= X.shape[0]
-  dW += (reg * W * 2)
-  dW /= X.shape[0]
 
   return loss, dW
 
